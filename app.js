@@ -1,8 +1,11 @@
 const express=require("express");
 const app=express();
+const mongoose=require('mongoose');
 const bodyParser=require('body-parser');
 const feedRoutes=require('./routes/feed');
 
+
+mongoose.connect("mongodb+srv://Rohit:rohit143@cluster0.ywnv8.mongodb.net/restapi",{useNewUrlParser:true,useUnifiedTopology:true});
 app.use(bodyParser.json()) //aplication/json
 
 //for cors

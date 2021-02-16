@@ -7,14 +7,19 @@ const {ObjectId}=require('mongodb')
 
 
 exports.getPosts=(req,res,next)=>{
-   post.find().then(posts=>{
-       if(!posts){
-           const error=new Error('not found');
-           error.statusCode=422;
-           throw(error);
-       }
-       res.status(200).json({posts:posts})
-   }).catch(err=>{
+    let page=req.query.page||1;
+    let perpage=2,totalitem;
+    post.find().countDocuments().then(no=>{
+        totalitem=no;
+        return post.find().
+        skip((page-1)*perpage).limit(perpage)
+    }).then(posts=>{
+        res.status(200).json({
+            message:'fetched',
+            posts:posts,
+            totalItems:totalitem
+        })
+    }).catch(err=>{
        if(!err.statusCode){
            err.statusCode=500;
        }
@@ -116,4 +121,25 @@ exports.updatePost=(req,res,next)=>{
 const clearImage=filepath=>{
     filepath=path.join(__dirname,'..',filepath);
     fs.unlink(filepath,err=>console.log(err));
+}
+
+exports.deletePost=(req,res,next)=>{
+    const postId=req.params.postId;
+    post.findById(postId).then(Post=>{
+        if(!post){
+            const error=new Error('could not find the post') ;
+                error.statusCode=404;
+                throw (error);
+        }
+        clearImage(Post.imageUrl);
+        return post.findByIdAndRemove(postId)
+    }).then(result=>{
+        console.log(result);
+        res.status(200).json({message:'deleted post'})
+    }).catch(err=>{
+        if(!err.statusCode){
+            err.statusCode=500;
+        }
+        next(err);
+    })
 }
